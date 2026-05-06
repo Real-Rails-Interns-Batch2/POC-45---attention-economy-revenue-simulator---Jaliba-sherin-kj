@@ -17,3 +17,22 @@ This project is a production-style intelligence dashboard developed for the Real
 
 ## 💡 About
 This dashboard provides actionable insights into the digital attention economy, helping viewers understand the economic drivers behind modern online platforms.
+## 🚀 How to Run
+
+### 💻 Frontend
+1. Navigate to the project directory.
+2. Install dependencies:
+   ```bash
+   npm install
+
+Run the development server
+npm run dev
+
+ Backend
+Ensure Python is installed.
+
+Run the data extraction scripts:
+
+Bash
+python extract.py
+   
