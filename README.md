@@ -11,3 +11,20 @@ This project is a dashboard that simulates how different social media platforms 
 * Next.js
 * Tailwind CSS
 * React Hooks
+### How to Run the Project locally:
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Real-Rails-Interns-Batch2/POC-45---attention-economy-revenue-simulator---Jaliba-sherin-kj.git](https://github.com/Real-Rails-Interns-Batch2/POC-45---attention-economy-revenue-simulator---Jaliba-sherin-kj.git)
+
+2.Install dependencies:
+
+```Bash
+npm install
+
+3.Run the development server:
+```Bash
+npm run dev
+
+View the dashboard:
+Open http://localhost:3000 in your browser.
