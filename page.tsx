@@ -1,368 +1,236 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import styles from "./page.module.css";
+import { useState, useEffect } from "react";
 
-/* ─────────────────────────── DATA ─────────────── */
-const PLATFORMS = [
-  { id: "youtube", name: "YouTube", icon: "▶️", category: "Video", dau: 122, session: 40, adLoad: 12, cpm: 7.5, creatorSplit: 55, color: "#f43f5e" },
-  { id: "tiktok", name: "TikTok", icon: "🎵", category: "Short Video", dau: 150, session: 95, adLoad: 8, cpm: 3.5, creatorSplit: 20, color: "#06b6d4" },
-  { id: "instagram", name: "Instagram", icon: "📸", category: "Social", dau: 500, session: 29, adLoad: 14, cpm: 8.2, creatorSplit: 15, color: "#8b5cf6" },
-  { id: "facebook", name: "Facebook", icon: "🟦", category: "Social", dau: 2100, session: 31, adLoad: 16, cpm: 6.1, creatorSplit: 10, color: "#3b82f6" },
-  { id: "twitter", name: "X / Twitter", icon: "🐦", category: "Microblogging", dau: 238, session: 30, adLoad: 10, cpm: 2.1, creatorSplit: 25, color: "#9ca3af" },
-  { id: "snapchat", name: "Snapchat", icon: "👻", category: "Messaging", dau: 414, session: 26, adLoad: 9, cpm: 2.95, creatorSplit: 35, color: "#f59e0b" },
+const platforms = [
+  { id: "youtube", name: "YouTube", icon: "▶️", dau: 122, session: 40, adLoad: 12, cpm: 7.5, creatorSplit: 55 },
+  { id: "tiktok", name: "TikTok", icon: "🎵", dau: 150, session: 95, adLoad: 8, cpm: 3.5, creatorSplit: 20 },
+  { id: "instagram", name: "Instagram", icon: "📸", dau: 500, session: 29, adLoad: 14, cpm: 8.2, creatorSplit: 15 },
+  { id: "facebook", name: "Facebook", icon: "🟦", dau: 2100, session: 31, adLoad: 16, cpm: 6.1, creatorSplit: 10 },
+  { id: "twitter", name: "X / Twitter", icon: "🐦", dau: 238, session: 30, adLoad: 10, cpm: 2.1, creatorSplit: 25 },
+  { id: "snapchat", name: "Snapchat", icon: "👻", dau: 414, session: 26, adLoad: 9, cpm: 2.95, creatorSplit: 35 },
 ];
 
-const VERTICAL_CPMS = [
-  { label: "Finance / Crypto", value: 52 },
-  { label: "Software / SaaS", value: 45 },
-  { label: "Real Estate", value: 38 },
-  { label: "E-Commerce", value: 15 },
-  { label: "Gaming", value: 8 },
-  { label: "Entertainment", value: 4 },
+const insights = [
+  {
+    emoji: "📉",
+    title: "The Ad Load Ceiling",
+    body: "Platforms cannot infinitely increase ad load without severely damaging user retention.",
+  },
+  {
+    emoji: "⏱️",
+    title: "Session Dominance",
+    body: "TikTok offsets lower CPMs entirely through massive session lengths (95+ minutes).",
+  },
 ];
 
-/* ─────────────────────────── COMPONENT ─────────────── */
-export default function AttentionEconomyDashboard() {
+export default function Page() {
   const [selectedId, setSelectedId] = useState("youtube");
-  const activePlatform = PLATFORMS.find((p) => p.id === selectedId) || PLATFORMS[0];
+  const [simDau, setSimDau] = useState(122);
+  const [simSession, setSimSession] = useState(40);
+  const [simAdLoad, setSimAdLoad] = useState(12);
+  const [simCpm, setSimCpm] = useState(7.5);
 
-  const [simDau, setSimDau] = useState(activePlatform.dau);
-  const [simSession, setSimSession] = useState(activePlatform.session);
-  const [simAdLoad, setSimAdLoad] = useState(activePlatform.adLoad);
-  const [simCpm, setSimCpm] = useState(activePlatform.cpm);
+  const activePlatform = platforms.find((p) => p.id === selectedId) || platforms[0];
 
   useEffect(() => {
     setSimDau(activePlatform.dau);
     setSimSession(activePlatform.session);
     setSimAdLoad(activePlatform.adLoad);
     setSimCpm(activePlatform.cpm);
-  }, [activePlatform.id]);
+  }, [selectedId]);
 
-  // Derived simulator metrics
   const totalHours = (simDau * 1000000 * simSession) / 60;
   const totalImpressions = totalHours * simAdLoad;
-  const simDailyRev = (totalImpressions / 1000) * simCpm;
-  const simCreatorRev = simDailyRev * (activePlatform.creatorSplit / 100);
-  const simPlatformNet = simDailyRev - simCreatorRev;
+  const dailyRevenue = (totalImpressions / 1000) * simCpm;
+  const creatorRevenue = dailyRevenue * (activePlatform.creatorSplit / 100);
+  const platformNet = dailyRevenue - creatorRevenue;
 
-  // Global aggregate metrics (static reference based on initial array)
-  const globalDau = PLATFORMS.reduce((acc, p) => acc + p.dau, 0) / 1000; // in Billions
-  const avgCpm = PLATFORMS.reduce((acc, p) => acc + p.cpm, 0) / PLATFORMS.length;
-  const avgSession = PLATFORMS.reduce((acc, p) => acc + p.session, 0) / PLATFORMS.length;
-  const totalRev = PLATFORMS.reduce((acc, p) => {
-    const hrs = (p.dau * 1000000 * p.session) / 60;
-    const imps = hrs * p.adLoad;
-    return acc + (imps / 1000) * p.cpm;
-  }, 0);
+  const cpmData = platforms.map((p) => ({ name: p.name, value: p.cpm }));
+  const maxCpm = Math.max(...cpmData.map((d) => d.value));
 
   return (
-    <div className={styles.root}>
-      {/* HEADER */}
-      <header className={styles.header}>
-        <div className={styles.headerInner}>
-          <div className={styles.headerBrand}>
-            <div className={styles.headerLogo}>⏱️</div>
-            <div>
-              <div className={styles.headerTitle}>Attention Economy Revenue Simulator</div>
-              <div className={styles.headerSub}>REAL RAILS INTELLIGENCE LIBRARY · POC-45</div>
-            </div>
-          </div>
-          <div className={styles.headerBadge}>
-            <div className={styles.liveDot}></div>
-            LIVE
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#0B0E14] text-white p-8">
+      <header className="mb-8 text-center border-b border-slate-700 pb-6">
+        <h1 className="text-4xl font-bold text-blue-500">Attention Economy Revenue Simulator</h1>
+        <p className="text-slate-400 mt-2">REAL RAILS INTELLIGENCE LIBRARY • POC-45</p>
       </header>
 
-      {/* TICKER */}
-      <div className={styles.tickerWrapper}>
-        <div className={styles.tickerLabel}>LIVE</div>
-        <div className={styles.tickerTrack}>
-          <div className={styles.tickerContent}>
-            <span className={styles.tickerItem}>Global ad spend 2024: $740B</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>Average person scrolls 300ft/day</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>TikTok avg session: 95 min/day</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>YouTube serves 500hrs video/min</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>Meta Q1 2024 revenue: $36.5B</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>CPM range: $0.50 - $52 by vertical</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>Creator economy market: $250B</span>
-            {/* Duplicated for infinite scroll effect */}
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>Global ad spend 2024: $740B</span>
-            <span className={styles.tickerDot}>•</span>
-            <span className={styles.tickerItem}>Average person scrolls 300ft/day</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 shadow-xl min-h-140">
+            <h2 className="text-2xl font-semibold mb-6 text-blue-400">
+              Revenue Engine Simulator: {activePlatform.name}
+            </h2>
+
+            <div className="space-y-6 mb-8">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-400">Daily Active Users (M)</label>
+                  <span className="text-lg font-bold text-red-400">{simDau}M</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="3000"
+                  value={simDau}
+                  onChange={(e) => setSimDau(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none accent-red-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-400">Session Length (min)</label>
+                  <span className="text-lg font-bold text-red-400">{simSession} min</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="180"
+                  value={simSession}
+                  onChange={(e) => setSimSession(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none accent-red-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-400">Ad Load (Ads/hr)</label>
+                  <span className="text-lg font-bold text-red-400">{simAdLoad}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="40"
+                  value={simAdLoad}
+                  onChange={(e) => setSimAdLoad(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none accent-red-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-medium text-slate-400">Average CPM ($)</label>
+                  <span className="text-lg font-bold text-red-400">${simCpm.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="20"
+                  step="0.5"
+                  value={simCpm}
+                  onChange={(e) => setSimCpm(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none accent-red-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-slate-800 p-4 rounded border border-slate-700">
+                <p className="text-xs text-slate-400">Total Hours</p>
+                <p className="text-xl font-bold text-cyan-400">{(totalHours / 1e6).toFixed(1)}M</p>
+              </div>
+              <div className="bg-slate-800 p-4 rounded border border-slate-700">
+                <p className="text-xs text-slate-400">Ad Impressions</p>
+                <p className="text-xl font-bold text-purple-400">{(totalImpressions / 1e9).toFixed(2)}B</p>
+              </div>
+              <div className="bg-slate-800 p-4 rounded border border-slate-700">
+                <p className="text-xs text-slate-400">Daily Revenue</p>
+                <p className="text-xl font-bold text-green-400">${(dailyRevenue / 1e6).toFixed(1)}M</p>
+              </div>
+              <div className="bg-slate-800 p-4 rounded border border-slate-700">
+                <p className="text-xs text-slate-400">Annual Run Rate</p>
+                <p className="text-xl font-bold text-yellow-400">${((dailyRevenue * 365) / 1e9).toFixed(2)}B</p>
+              </div>
+            </div>
+
+            <h3 className="text-lg font-semibold mb-3 text-blue-400">Revenue Split</h3>
+            <div className="flex h-6 bg-slate-700 rounded overflow-hidden mb-4">
+              <div
+                className="bg-red-500 h-full transition-all duration-500"
+                style={{ width: `${100 - activePlatform.creatorSplit}%` }}
+              />
+              <div
+                className="bg-green-500 h-full transition-all duration-500"
+                style={{ width: `${activePlatform.creatorSplit}%` }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-slate-800 p-3 rounded">
+                <p className="text-slate-400">Platform ({100 - activePlatform.creatorSplit}%)</p>
+                <p className="font-bold text-red-400">${(platformNet / 1e6).toFixed(1)}M</p>
+              </div>
+              <div className="bg-slate-800 p-3 rounded">
+                <p className="text-slate-400">Creator ({activePlatform.creatorSplit}%)</p>
+                <p className="font-bold text-green-400">${(creatorRevenue / 1e6).toFixed(1)}M</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 shadow-xl min-h-130">
+            <h2 className="text-2xl font-semibold mb-6 text-blue-400">Platform Intelligence</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {platforms.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedId(p.id)}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedId === p.id ? "border-red-500 bg-slate-800" : "border-slate-700 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-2">{p.icon}</span>
+                    <h3 className="font-semibold text-blue-400">{p.name}</h3>
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    <p>DAU: {p.dau}M | CPM: ${p.cpm}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 shadow-xl min-h-105">
+            <h3 className="text-lg font-semibold mb-4 text-blue-400 text-center">CPM by Ad Vertical</h3>
+            <div className="space-y-4">
+              {cpmData.map((item) => (
+                <div key={item.name}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-400">{item.name}</span>
+                    <span className="text-blue-400 font-bold">${item.value}</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-1.5">
+                    <div
+                      className="bg-blue-500 h-1.5 rounded-full"
+                      style={{ width: `${(item.value / maxCpm) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-slate-900 rounded-lg p-6 border border-slate-700 shadow-xl min-h-80">
+            <h2 className="text-2xl font-semibold mb-6 text-blue-400 text-center">Why This Matters</h2>
+            <div className="space-y-4">
+              {insights.map((insight, index) => (
+                <div key={index} className="bg-slate-800 p-4 rounded border border-slate-700">
+                  <div className="flex gap-3">
+                    <span className="text-2xl">{insight.emoji}</span>
+                    <div>
+                      <h4 className="font-semibold text-blue-400">{insight.title}</h4>
+                      <p className="text-slate-400 text-xs leading-relaxed mt-1">{insight.body}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      {/* KPI SECTION */}
-      <section className={styles.kpiSection}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>COMBINED DAILY AD REVENUE</div>
-          <div className={styles.kpiValue} style={{ color: "#3b82f6" }}>${(totalRev / 1e6).toFixed(1)}M</div>
-          <div className={styles.kpiSub}>Across 6 major platforms</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>TOTAL DAILY ACTIVE USERS</div>
-          <div className={styles.kpiValue} style={{ color: "#06b6d4" }}>{globalDau.toFixed(1)}B</div>
-          <div className={styles.kpiSub}>Combined audience</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>AVG CPM ACROSS PLATFORMS</div>
-          <div className={styles.kpiValue} style={{ color: "#8b5cf6" }}>${avgCpm.toFixed(2)}</div>
-          <div className={styles.kpiSub}>Per 1,000 impressions</div>
-        </div>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>AVG DAILY SESSION</div>
-          <div className={styles.kpiValue} style={{ color: "#10b981" }}>{Math.round(avgSession)} min</div>
-          <div className={styles.kpiSub}>Attention captured</div>
-        </div>
-      </section>
-
-      {/* MAIN CONTENT */}
-      <main className={styles.mainLayout}>
-        <div className={styles.leftPane}>
-          {/* REVENUE BARS */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Daily Revenue by Platform</div>
-              <div className={styles.cardSub}>Estimated daily ad revenue based on DAU × session × CPM × ad load</div>
-            </div>
-            <div className={styles.barList}>
-              {PLATFORMS.map((p, i) => {
-                const hrs = (p.dau * 1000000 * p.session) / 60;
-                const imps = hrs * p.adLoad;
-                const rev = (imps / 1000) * p.cpm;
-                // find max for scaling
-                const maxRev = Math.max(...PLATFORMS.map(px => ((px.dau * 1000000 * px.session) / 60) * px.adLoad / 1000 * px.cpm));
-                const widthPct = (rev / maxRev) * 100;
-                
-                return (
-                  <div key={p.id} className={styles.barRow} style={{ animationDelay: `${i * 0.1}s` }}>
-                    <div className={styles.barMeta}>
-                      <div className={styles.barIcon}>{p.icon}</div>
-                      <div className={styles.barName}>{p.name}</div>
-                      <div className={styles.barRevenue}>${(rev / 1e6).toFixed(1)}M/day</div>
-                    </div>
-                    <div className={styles.barTrack}>
-                      <div 
-                        className={styles.barFill} 
-                        style={{ backgroundColor: p.color, "--bar-width": `${widthPct}%` } as any}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* SIMULATOR */}
-          <div className={styles.simPanel}>
-            <div className={styles.simHeader}>
-              <div className={styles.simIcon}>🎛️</div>
-              <div>
-                <div className={styles.simTitle}>Revenue Engine Simulator: {activePlatform.name}</div>
-                <div className={styles.simSub}>Adjust the levers of the attention economy to see the financial impact.</div>
-              </div>
-            </div>
-
-            <div className={styles.simControls}>
-              <div className={styles.sliderControl}>
-                <div className={styles.sliderHeader}>
-                  <div className={styles.sliderLabel}>Daily Active Users (M)</div>
-                  <div className={styles.sliderValue}>{simDau}M</div>
-                </div>
-                <div className={styles.sliderTrack}>
-                  <div className={styles.sliderFill} style={{ backgroundColor: activePlatform.color, width: `${(simDau / 3000) * 100}%` }}></div>
-                  <input type="range" className={styles.sliderInput} min="10" max="3000" value={simDau} onChange={e => setSimDau(Number(e.target.value))} />
-                </div>
-              </div>
-              <div className={styles.sliderControl}>
-                <div className={styles.sliderHeader}>
-                  <div className={styles.sliderLabel}>Session Length (min)</div>
-                  <div className={styles.sliderValue}>{simSession} min</div>
-                </div>
-                <div className={styles.sliderTrack}>
-                  <div className={styles.sliderFill} style={{ backgroundColor: activePlatform.color, width: `${(simSession / 180) * 100}%` }}></div>
-                  <input type="range" className={styles.sliderInput} min="5" max="180" value={simSession} onChange={e => setSimSession(Number(e.target.value))} />
-                </div>
-              </div>
-              <div className={styles.sliderControl}>
-                <div className={styles.sliderHeader}>
-                  <div className={styles.sliderLabel}>Ad Load (Ads/hr)</div>
-                  <div className={styles.sliderValue}>{simAdLoad}</div>
-                </div>
-                <div className={styles.sliderTrack}>
-                  <div className={styles.sliderFill} style={{ backgroundColor: activePlatform.color, width: `${(simAdLoad / 40) * 100}%` }}></div>
-                  <input type="range" className={styles.sliderInput} min="1" max="40" value={simAdLoad} onChange={e => setSimAdLoad(Number(e.target.value))} />
-                </div>
-              </div>
-              <div className={styles.sliderControl}>
-                <div className={styles.sliderHeader}>
-                  <div className={styles.sliderLabel}>Average CPM ($)</div>
-                  <div className={styles.sliderValue}>${simCpm.toFixed(2)}</div>
-                </div>
-                <div className={styles.sliderTrack}>
-                  <div className={styles.sliderFill} style={{ backgroundColor: activePlatform.color, width: `${(simCpm / 20) * 100}%` }}></div>
-                  <input type="range" className={styles.sliderInput} min="0.5" max="20" step="0.5" value={simCpm} onChange={e => setSimCpm(Number(e.target.value))} />
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.simResults}>
-              <div className={styles.resultCard}>
-                <div className={styles.resultLabel}>Total Hours</div>
-                <div className={styles.resultValue}>{(totalHours / 1e6).toFixed(1)}M</div>
-              </div>
-              <div className={styles.resultCard}>
-                <div className={styles.resultLabel}>Ad Impressions</div>
-                <div className={styles.resultValue}>{(totalImpressions / 1e9).toFixed(2)}B</div>
-              </div>
-              <div className={styles.resultCard}>
-                <div className={styles.resultLabel}>Daily Revenue</div>
-                <div className={styles.resultValue} style={{ color: "#10b981" }}>${(simDailyRev / 1e6).toFixed(1)}M</div>
-              </div>
-              <div className={styles.resultCard}>
-                <div className={styles.resultLabel}>Annual Run Rate</div>
-                <div className={styles.resultValue} style={{ color: "#3b82f6" }}>${((simDailyRev * 365) / 1e9).toFixed(2)}B</div>
-              </div>
-            </div>
-
-            <div className={styles.revenueBreakdown}>
-              <div className={styles.bdTitle}>Revenue Split (Platform vs Creators)</div>
-              <div className={styles.bdBar}>
-                <div className={styles.bdPlatform} style={{ backgroundColor: activePlatform.color, width: `${100 - activePlatform.creatorSplit}%` }}></div>
-                <div className={styles.bdCreator} style={{ width: `${activePlatform.creatorSplit}%` }}></div>
-              </div>
-              <div className={styles.bdLegend}>
-                <div><span className={styles.bdDot} style={{ backgroundColor: activePlatform.color }}></span> Platform Net: ${(simPlatformNet / 1e6).toFixed(1)}M ({100 - activePlatform.creatorSplit}%)</div>
-                <div><span className={styles.bdDot} style={{ backgroundColor: "#10b981" }}></span> Creator Payout: ${(simCreatorRev / 1e6).toFixed(1)}M ({activePlatform.creatorSplit}%)</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* PLATFORM CARDS */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Platform Intelligence</div>
-              <div className={styles.cardSub}>Select a platform to load its metrics into the simulator.</div>
-            </div>
-            <div className={styles.platformGrid}>
-              {PLATFORMS.map((p) => (
-                <div 
-                  key={p.id} 
-                  className={`${styles.platformCard} ${selectedId === p.id ? styles.platformCardSelected : ""}`}
-                  style={{ "--accent": p.color } as any}
-                  onClick={() => setSelectedId(p.id)}
-                >
-                  <div className={styles.pcHeader}>
-                    <div className={styles.pcIcon}>{p.icon}</div>
-                    <div>
-                      <div className={styles.pcName}>{p.name}</div>
-                      <div className={styles.pcCategory}>{p.category}</div>
-                    </div>
-                  </div>
-                  <div className={styles.pcStats}>
-                    <div className={styles.pcStat}>
-                      <div className={styles.pcStatLabel}>DAU</div>
-                      <div className={styles.pcStatVal}>{p.dau}M</div>
-                    </div>
-                    <div className={styles.pcStat}>
-                      <div className={styles.pcStatLabel}>Time</div>
-                      <div className={styles.pcStatVal}>{p.session}m</div>
-                    </div>
-                    <div className={styles.pcStat}>
-                      <div className={styles.pcStatLabel}>CPM</div>
-                      <div className={styles.pcStatVal}>${p.cpm}</div>
-                    </div>
-                  </div>
-                  <div className={styles.pcRevRow}>
-                    <div className={styles.pcRevLabel}>Rev Share</div>
-                    <div className={styles.pcRevCreator}>{p.creatorSplit}% to Creators</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        <div className={styles.rightPane}>
-          {/* ATTENTION VALUE INDEX */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>Attention Value Index</div>
-              <div className={styles.cardSub}>Revenue generated per user per minute</div>
-            </div>
-            <div className={styles.attentionTable}>
-              <div className={styles.attTableHeader}>
-                <div>Platform</div>
-                <div>$/User/Min</div>
-                <div>Rank</div>
-              </div>
-              {PLATFORMS.map(p => ({
-                ...p,
-                valPerMin: (p.adLoad / 60) * (p.cpm / 1000)
-              }))
-              .sort((a, b) => b.valPerMin - a.valPerMin)
-              .map((p, i) => (
-                <div key={p.id} className={styles.attTableRow} style={{ animationDelay: `${i * 0.1}s` }}>
-                  <div style={{ color: p.color, fontWeight: 600 }}>{p.icon} {p.name}</div>
-                  <div className={styles.attTableVal}>${(p.valPerMin * 1000000).toFixed(4)}</div>
-                  <div><span className={styles.attRank} style={{ backgroundColor: p.color }}>#{i + 1}</span></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* CPM BY VERTICAL */}
-          <div className={styles.card}>
-            <div className={styles.cardHeader}>
-              <div className={styles.cardTitle}>CPM by Ad Vertical</div>
-              <div className={styles.cardSub}>Industry average ranges</div>
-            </div>
-            <div className={styles.cpmList}>
-              {VERTICAL_CPMS.map((v, i) => (
-                <div key={i} className={styles.cpmRow}>
-                  <div className={styles.cpmVertical}>{v.label}</div>
-                  <div className={styles.cpmBar}>
-                    <div className={styles.cpmFill} style={{ backgroundColor: "#3b82f6", "--bar-width": `${(v.value / 60) * 100}%` } as any}></div>
-                  </div>
-                  <div className={styles.cpmVal}>${v.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* INSIGHTS */}
-          <div className={styles.insightPanel}>
-            <div className={styles.insightTitle}><span className={styles.insightIcon}>💡</span> Why This Matters</div>
-            <div className={styles.insightList}>
-              <div className={styles.insightItem}>
-                <div className={styles.insightEmoji}>📉</div>
-                <div>
-                  <div className={styles.insightItemTitle}>The Ad Load Ceiling</div>
-                  <div className={styles.insightItemBody}>Platforms cannot infinitely increase ad load without severely damaging user retention.</div>
-                </div>
-              </div>
-              <div className={styles.insightItem}>
-                <div className={styles.insightEmoji}>⏱️</div>
-                <div>
-                  <div className={styles.insightItemTitle}>Session Dominance</div>
-                  <div className={styles.insightItemBody}>TikTok offsets lower CPMs entirely through massive session lengths (95+ minutes).</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
     </div>
   );
 }
