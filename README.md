@@ -28,3 +28,14 @@ npm run dev
 
 View the dashboard:
 Open http://localhost:3000 in your browser.
+
+
+
+# Backend Run
+
+cd backend
+
+pip install -r requirements.txt
+
+uvicorn api_main:app --reload
+
